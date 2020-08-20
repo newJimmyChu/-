@@ -1,5 +1,7 @@
 # Mysql学习笔记（深入浅出Mysql）
 
+[TOC]
+
 ### 2.2 MySQL入门
 
 三大SQL语句类：
@@ -313,7 +315,7 @@ insert into t values('a','b'),('a','b','a');
 
 
 
-### 第四章 MySQL 中的运算符
+### 4. MySQL 中的运算符
 
 #### 4.1 算数运算符
 
@@ -376,7 +378,7 @@ select 'abcdef' regexp 'ab' ,'abcdefg' regexp 'k';
 
 
 
-### 第五章 常用函数
+### 5. 常用函数
 
 #### 5.1 字符串函数
 
@@ -456,4 +458,10 @@ select substring('beijing2008',8,4);
 
 **CASE [expr] WHEN [value1]**
 **THEN[result1]…ELSE[default]END：**如果expr=value1，返还result1，否则返还default
+
+```mysql
+#if示例
+select if(salary>2000,'high','low') from employee;
+
+```
 

@@ -2,6 +2,8 @@
 
 [TOC]
 
+# 第一部分 基础
+
 ### 2.2 MySQL入门
 
 三大SQL语句类：
@@ -463,5 +465,126 @@ select substring('beijing2008',8,4);
 #if示例
 select if(salary>2000,'high','low') from employee;
 
+#if null示例
+select ifnull(salary,0) from salary;
+
+#case when示例
+select case when salary<2000 then 'low' else 'high' end from salary;
+
+#多项case示例
+select case when salary<2000 then 'low' when salary<3000 then 'mid' else 'high' end from salary;
 ```
+
+#### 5.5 其他常用函数
+
+| 函数           | 功能                 |
+| -------------- | -------------------- |
+| DATABASE()     | 返回数据库名称       |
+| VERSION()      | 返回数据库版本       |
+| USER()         | 返回当前登录用户名   |
+| INET_ATON(IP)  | 返回IP地址的数字形式 |
+| INET_NTOA(num) | 返回数字代表IP地址   |
+| PASSWORD(str)  | 返回字符串的加密形式 |
+| MD5()          | 返回字符串的MD5值    |
+
+
+
+## 第二部分 开发
+
+### 7. 存储引擎的选择
+
+创建一个新的表并设置引擎：
+
+```mysql
+create table mytable (
+	id int(10) not null primary key,
+    name varchar(30)
+) engine=innodb default charset=utf-8;
+
+#更改当前引擎为innodb
+alter table mytable engine=innodb;
+```
+
+MyISAM & InooDB对比：
+
+1. MyISAM支持表级锁，InnoDB支持行级锁
+2. 二者都支持B树索引
+3. MyISAM支持全文索引
+4. InnoDB支持集群索引和数据索引
+5. 二者都支持索引缓存
+6. MyISAM支持数据可压缩
+7. MyISAM空间和内存占用较低，InnoDB较高
+8. MyISAM批量插入的速度较高，InnoDB较低
+9. InnoDB支持外键
+
+**MyISAM：**不支持事务，也不支持外键，优点在于访问速度较快。如果对事务完整性没有要求或者以SELECT, INSERT为主的应用可以使用
+
+**InnoDB：**提供了具有提交，回滚和崩溃恢复的事务安全，但是对比MyISAM，InnoDB效率交叉，并且需要额外空间保留数据和索引
+
+**InnoDB特性：**
+
+1. 表自动增长列可以手工插入，如果插入的值是0或者空，则会插入自动增长后的值
+2. 自动增长必须是索引，或者是组合索引的第一列
+3. 外键约束：父表必须包含对应索引
+4. 存储方式：使用共享表空间存储，并且舒勇多表空间存储
+
+
+
+### 8. 选择合适的数据类型
+
+#### 8.1 CHAR与VARCHAR
+
+CHAR的储存字节数是固定的，而VARCHAR的储存字节数是可变的
+
+CHAR的处理速度要快得多，但是会浪费一定的存储空间
+
+InnoDB推荐使用VARCHAR，MyISAM推荐使用CHAR
+
+#### 8.2 TEXT与BLOB
+
+负责保存较大文本
+
+BLOB（二进制）可用于保存照片，TEXT（字符）可用于保存大段文字
+
+在删除 BLOB 或者 TEXT 时可以考虑定期使用 OPTIMIZE TABLE 功能提高性能
+
+OPTIMIZE TABLE 可以回收并清空之前删除的空间
+
+**合成索引：**使用 MD5() 计算哈希值，以提高查询性能
+
+```mysql
+create table t (id int(10),context blob,hash varchar(40));
+
+#插入一条带哈希索引的数据
+insert into t values(1, repeat('beijing',2),md5(context));
+
+#通过哈希值查找索引数据
+select * from t where hash=md5(repeat('beijing'),2);
+```
+
+前缀索引：可以对 context 的前100个字符进行模糊查询
+
+```mysql
+select * from t where context like 'beijing%';
+```
+
+我们在查找包含blob和text字段的数据时，应避免使用 select * 语句（应当只查询需要的字段），以避免对网络的影响
+
+
+
+### 9. 字符集
+
+UTF-8 是 MySQL 5.0 唯一支持的 Unicode 字符集
+
+**字符集选取：**
+
+1. 针对不同语言的国家和地区，应当选择 Unicode （UTF-8 for MySQL）
+2. 需要考虑先前字符集的兼容性
+3. 如果数据库只需要支持中文，并且数据量很大，那么我们可以使用 GBK （每个汉字只占2个字节，而UTF-8需要3个字节）
+
+
+
+### 10. 索引
+
+
 

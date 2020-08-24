@@ -586,5 +586,90 @@ UTF-8 是 MySQL 5.0 唯一支持的 Unicode 字符集
 
 ### 10. 索引
 
+所有的MySQL列类型都可以被索引，对相关列使用索引可以挺好SELECT的性能
+
+每种存储引擎至少支持16个索引，总索引长度至少为256字节
+
+MyISAM和InnoDB的存储引擎默认创建BTREE索引
+
+索引创建语句：
+
+```mysql
+create index cityindex on city(city(10));
+
+drop index cityindex on city;
+```
+
+#### 10.2 索引设计原则
+
+1. 最适合索引的列往往出现在WHERE语句中，而不是在SELECT语句中
+2. 使用唯一索引（索引的列基数越大，效果越好）
+3. 使用短索引，如果对字符串进行索引，应当制定一个前缀长度
+4. 利用最左前缀
+5. 不要过度索引，索引越多，优化时间越长
+6. 对于InnoDB，记录按照主键顺序->唯一索引->系统生成的内部列的顺序保存。所以在使用InnoDB时应当指明主键
+
+#### BTREE和哈希索引
+
+哈希索引具有以下特征：
+
+1. 只用于使用=或者<=>操作符比较
+2. 优化器不能使用HASH索引来加速ORDER BY操作
+3. 只能使用整个关键字来搜索一行
+
+BTREE在使用>, <, >=, <=, between, !=， 或者<>或者LIKE时都可以使用相关列上的索引
+
+```mysql
+#适用于BTREE和HASH上的索引
+select * from t1 where key_col = 1 or key_col in (1,2,3);
+
+#只适用于BTREE的索引
+select * from t1 where key_col > 1 and key_col < 100;
+select * from t1 where key_col like '%123' or key_date between 2020-01-02 and 2020-07-06;
+```
+
+
+
+### 11. 视图(view）
+
+视图：一种虚拟存在的表，不在数据库中实际存在
+
+视图的优势：
+
+1. 简单：用户不需要关心表结构，关联条件和筛选条件
+2. 安全：使用视图的用户只能访问被允许查询的结果集
+3. 数据独立：一旦视图的结构确定了，可以屏蔽表结构变化对用户的影响
+
+**视图操作：**
+
+1. 修改视图
+2. 删除视图
+3. 查看视图定义
+
+**修改视图：**
+
+```mysql
+#创建视图·需要有CREATE VIEW 权限
+create or replace view myview as
+select id,sum(amount) from payment group by deptid; 
+
+create or replace view myview as select 3.14 as pi;
+```
+
+不可更新视图：
+
+1. 包含以下关键字的SQL语句：聚合函数，DISTINCT, GROUP BY， HAVING, UNION等不可以更新视图
+2. 常量视图
+3. SELECT中包含子查询
+4. JOIN
+5. FROM
+6. WERE字句中的子查询引用了FROM字句中的表
+
+WITH[CASCADED | LOCAL] CHECK OPTION 决定了是否允许更新数据使记录不再满足视图条件
+
+1. LOCAL为只要满足本视图条件即可进行更新操作
+2. CASCADED则是必须满足针对该视图的所有视图的条件才可以更新
+3. 默认为CASCADED
+
 
 

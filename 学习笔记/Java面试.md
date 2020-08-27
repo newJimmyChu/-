@@ -357,3 +357,25 @@ InnoDB：如果一个主键被定义，则作为秘籍索引
 如果没有主键，则第一个唯一非空索引作为密集索引
 
 反之innodb会生成一个隐藏主键
+
+### 3.6 索引
+
+如何定位并优化慢查询mysql：
+
+1. 根据慢日志定位慢查询sql （比较慢的mysql）
+2. 使用 explain 等工具分析
+
+Explain 关键字： 
+
+type: index & all（全表扫描->需要优化）
+
+extra: 
+
+1. using filesort（表示mysql会对结果进行外部索引排序，排序可能在内存或者在磁盘上进行排序）
+2. using temporary：表示mysql对查询结果排序时使用临时表，常见于group by 或者 order by
+
+```mysql
+#给·表添加索引
+alter table person_table add index idx_name(name);
+```
+

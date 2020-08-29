@@ -379,3 +379,79 @@ extra:
 alter table person_table add index idx_name(name);
 ```
 
+### 3.7 联合索引的最左匹配原则的成因：
+
+```mysql
+select * from person_info_large where area='sss' and title='abx';
+```
+
+最左匹配原则：mysql会一直向右匹配知道范围查询就终止匹配（>, <. between, like），=和in条件式的顺序无所谓
+
+索引是越多越好么：
+
+1. 数据量小的表不需要简历索引，建立会添加额外开销
+2. 数据变更需要维护索引
+3. 更多的索引意味着更多的空间
+
+### 3.8 锁(MyISAM & InnoDB)
+
+锁方面的区别：
+
+1. MyISAM默认表级锁，不支持行级锁，InnoDB使用的是行级锁，也支持表级锁
+2. MyISAM的被读锁锁住时，无法写入数据但是可以读取数据（共享锁）；如果被写锁锁住，则无法进行读写（写锁为排它锁）；for update可以给select加写锁
+3. InnoDB支持事务，使用二段锁；执行语句时上锁，提交事务（commit）时解锁 不走索引时，查询使用表级锁
+4. 
+5. IS，IX
+
+MyISAM适合场景：
+
+1. 频繁执行count语句
+2. 对数据进行增删改的频率不高，查询效率高
+3. 适合没有事务的场景
+
+InnoDB适合场景：
+
+1. 数据增删改查相当频繁
+2. 可靠性要求高
+
+粒度：表级锁，行级锁，页级锁（不常用）
+
+级别：共享锁，排它锁
+
+方式：自动锁，显示锁
+
+操作：DML锁，DDL锁
+
+使用方式：乐观锁，悲观锁
+
+### 3.9 数据库事务的四大特性
+
+**ACID**：
+
+1. 原子性（Atomic）事务包含的操作要么全做要么全不做
+2. 一致性（Consistency）一个一致状态转换为另一个一致状态（比如第一次查询id=1和第一百次查询id=1的结果需要为一致的）
+3. 隔离性（Isolation）多个事务不互相影响
+4. 持久性（Durability）事务保存，恢复
+
+### 3.10 隔离性
+
+并发访问问题以及如何避免
+
+1. 更新丢失，一个事务的更新覆盖了另一个事务（数据库帮我们加锁处理）
+
+2. 脏读：READ-COMMITED级别来避免
+
+   ```mysql
+   #事务隔离级别
+   select @@tx_isolation;
+   set session transaction isolation level read uncommitted;
+   ```
+
+   例子：两个事务T1和T2，T1修改了数据但是没有提交事务，T2读取修改完毕的数据；此时T1回滚，T2无法得到T1最新的数据，产生脏读
+
+3. 不可重复读：Non-repeatable read REPEATABLE-READ来避免
+
+   在同一事务中多次读取数据不一致的问题（不可靠性）
+
+4. 幻读：SERIALIZABLE事务隔离级别可以避免
+   在事务A执行了读取操作，但是事务B插入了新的数据，事务A再次执行了读取操作
